@@ -1,3 +1,19 @@
-# This file uses GNU make utility, which determines automatically which pieces of a large program need to be recompiled, and issues the commands to recompile them. The correctness of your make file depends on file dependencies used correctly.
+CC=gcc
+CFLAGS=-Wall -g
 
+all: stage1exe
 
+stage1exe: driver.o lexer.o parser.o
+	$(CC) $(CFLAGS) -o stage1exe driver.o lexer.o parser.o
+
+driver.o: driver.c lexer.h parser.h
+	$(CC) $(CFLAGS) -c driver.c
+
+lexer.o: lexer.c lexer.h lexerDef.h
+	$(CC) $(CFLAGS) -c lexer.c
+
+parser.o: parser.c parser.h parserDef.h
+	$(CC) $(CFLAGS) -c parser.c
+
+clean:
+	rm -f *.o stage1exe
