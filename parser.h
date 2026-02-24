@@ -1,11 +1,18 @@
 // Contains function prototype declarations of functions in parser.c
 #include <stdint.h>
+#include <stdbool.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 
 #define MAX_RHS_LENGTH 32
 #define MAX_SYMBOL_LENGTH 40
 #define MAX_GRAMMAR_LENGTH 64
-#define MAX_SYMBOLS 128
-#define EPSILON 65535
+#define MAX_SYMBOLS 256
+#define EPSILON 0
+#define MAX_PRODUCTIONS 256
+#define END_OF_INPUT 254
+#define SYM_S 1  
 
 char symbol_table[MAX_SYMBOLS][MAX_SYMBOL_LENGTH];
 uint16_t symbol_count = 0;
@@ -20,3 +27,14 @@ typedef struct
     uint16_t rhs_length;
 
 } Grammar;
+
+typedef struct {
+    uint16_t symbols[MAX_SYMBOLS];
+    uint16_t count;
+} SymbolSet;
+
+typedef struct {
+    SymbolSet *first_sets;  
+    SymbolSet *follow_sets; 
+    uint16_t num_symbols;
+} FirstFollowSets;
