@@ -282,14 +282,67 @@ void readGrammar(const char *filename) {
 
 
 
-void createParseTable(struct FirstAndFollow F, struct Table T) {
-    /*
-        This function needs to construct the predictive table. 
-        Challenges:
-            - The structure of the table would be related to sturcture used for the First and Follow sets and the Grammar.
-    */
-}
+// Create LL(1) parse table:
+// parse_table[non_terminal][terminal] = production index in grammar[], else -1
+void createparsetable(int parse_table[MAX_NON_TERMINALS][MAX_TERMINALS], const Grammar *grammar, uint16_t grammar_count, const FirstFollowSets *ff_sets) {
+    for (uint16_t i = 0; i < MAX_NON_TERMINALS; i++) {
+        for (uint16_t j = 0; j < MAX_TERMINALS; j++) {
+            parse_table[i][j] = -1;
+        }
+    }
 
+    for (uint16_t r = 0; r < grammar_count; r++) {
+        uint16_t lhs = grammar[r].lhs;
+        SymbolSet first_rhs;
+        compute_first_of_rhs(grammar[r].rhs, grammar[r].rhs_length, ff_sets, &first_rhs);
+
+        for (uint16_t i = 0; i < first_rhs.count; i++) {
+            uint16_t terminal = first_rhs.symbols[i];
+            if (terminal != EPSILON) {
+                parse_table[lhs][terminal] = r;
+            }
+        }
+
+        if (is_in_set(&first_rhs, EPSILON)) {
+            const SymbolSet *follow_lhs = &ff_sets->follow_sets[lhs];
+            for (uint16_t i = 0; i < follow_lhs->count; i++) {
+                uint16_t terminal = follow_lhs->symbols[i];
+                parse_table[lhs][terminal] = r;
+            }
+        }
+    }
+}
+/////////////////////////////////////////////Helper Function //////////////////////////////////////////////////////////////////////////
+
+static void compute_first_of_rhs(const uint16_t rhs[], uint16_t rhs_length, const FirstFollowSets *ff_sets, SymbolSet *out_first) {
+    out_first->count = 0;
+    if (rhs_length == 0) {
+        add_to_set(out_first, EPSILON);
+        return;
+    }
+
+    bool all_nullable = true;
+    for (uint16_t i = 0; i < rhs_length; i++) {
+        uint16_t sym = rhs[i];
+
+        for (uint16_t j = 0; j < ff_sets->first_sets[sym].count; j++) {
+            uint16_t first_sym = ff_sets->first_sets[sym].symbols[j];
+            if (first_sym != EPSILON) {
+                add_to_set(out_first, first_sym);
+            }
+        }
+
+        if (!is_in_set(&ff_sets->first_sets[sym], EPSILON)) {
+            all_nullable = false;
+            break;
+        }
+    }
+
+    if (all_nullable) {
+        add_to_set(out_first, EPSILON);
+    }
+}
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 struct ParseTree parseInputSourceCode(char *testcaseFile, struct Table T) {
     /*
         This funciton should be relatively straight forward. The challenge here would be maintaining the n-ary tree for the parse tree.

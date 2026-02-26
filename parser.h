@@ -13,6 +13,8 @@
 #define MAX_PRODUCTIONS 256
 #define END_OF_INPUT 254
 #define SYM_S 1  
+#define MAX_NON_TERMINALS 100
+#define MAX_TERMINALS 256
 
 char symbol_table[MAX_SYMBOLS][MAX_SYMBOL_LENGTH];
 uint16_t symbol_count = 0;
