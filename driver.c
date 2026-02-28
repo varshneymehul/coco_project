@@ -65,8 +65,8 @@ int main(int argc, char *argv[]) {
                     if (t.type == TK_EOF) break;
                     if (t.type == TK_ERROR) continue; // Already prints line
                     
-                    printf("Line No: %-5d | Token: %-20s | Lexeme: %s\n", 
-                           t.lineNo, getTokenName(t.type), t.lexeme);
+                    printf("Line no. %d\t Lexeme %s\tToken %s\n", 
+                           t.lineNo, t.lexeme, getTokenName(t.type));
                 }
                 closeBuffer(B);
                 fclose(fp);

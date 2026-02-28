@@ -193,7 +193,7 @@ tokenInfo getNextToken(twinBuffer B) {
                     token.type = TK_ERROR;
                     token.lexeme[lex_len++] = c;
                     token.lineNo = currentLineNo;
-                    printf("Line %d: Lexical Error - Unknown recognized character '%c'\n", currentLineNo, c);
+                    printf("Line no: %d : Error: Unknown pattern <%c>\n", currentLineNo, c);
                     return token;
                 }
                 break;
@@ -275,7 +275,7 @@ tokenInfo getNextToken(twinBuffer B) {
                         token.type = TK_FUNID;
                     } else {
                         token.type = TK_ERROR;
-                        printf("Line %d: Lexical Error - Function identifier too long\n", currentLineNo);
+                        printf("Line no: %d : Error: Identifier is longer than the prescribed length <%s>\n", currentLineNo, token.lexeme);
                     }
                     token.lineNo = currentLineNo;
                     return token;
@@ -286,7 +286,7 @@ tokenInfo getNextToken(twinBuffer B) {
                 else {
                     retract(B, 1);
                     if (lex_len <= 30) token.type = TK_FUNID;
-                    else { token.type = TK_ERROR; printf("Line %d: Lexical Error - Function identifier too long\n", currentLineNo); }
+                    else { token.type = TK_ERROR; printf("Line no: %d : Error: Identifier is longer than the prescribed length <%s>\n", currentLineNo, token.lexeme); }
                     token.lineNo = currentLineNo;
                     return token;
                 }
@@ -316,11 +316,24 @@ tokenInfo getNextToken(twinBuffer B) {
                 break;
             case 31:
                 if (isDigit(c)) { token.lexeme[lex_len++] = c; state = 32; }
-                else { retract(B, 2); token.lexeme[--lex_len] = '\0'; token.type = TK_NUM; token.value.numValue = atoi(token.lexeme); token.lineNo = currentLineNo; return token; }
+                else { 
+                    retract(B, 2); 
+                    token.lexeme[--lex_len] = '\0'; 
+                    token.type = TK_NUM; 
+                    token.value.numValue = atoi(token.lexeme); 
+                    token.lineNo = currentLineNo; 
+                    return token; 
+                }
                 break;
             case 32:
                 if (isDigit(c)) { token.lexeme[lex_len++] = c; state = 33; }
-                else { retract(B, 3); lex_len -= 2; token.lexeme[lex_len] = '\0'; token.type = TK_NUM; token.value.numValue = atoi(token.lexeme); token.lineNo = currentLineNo; return token; }
+                else { 
+                    retract(B, 1); 
+                    token.type = TK_ERROR; 
+                    token.lineNo = currentLineNo; 
+                    printf("Line no: %d : Error: Unknown pattern <%s>\n", currentLineNo, token.lexeme);
+                    return token; 
+                }
                 break;
             case 33:
                 if (c == 'E') { token.lexeme[lex_len++] = c; state = 34; }
@@ -335,23 +348,45 @@ tokenInfo getNextToken(twinBuffer B) {
             case 34:
                 if (c == '+' || c == '-') { token.lexeme[lex_len++] = c; state = 35; }
                 else if (isDigit(c)) { token.lexeme[lex_len++] = c; state = 36; }
-                else { retract(B, 5); lex_len -= 3; token.lexeme[lex_len] = '\0'; token.type = TK_NUM; token.value.numValue = atoi(token.lexeme); token.lineNo = currentLineNo; return token; }
+                else { 
+                    retract(B, 1); 
+                    token.type = TK_ERROR; 
+                    token.lineNo = currentLineNo; 
+                    printf("Line no: %d : Error: Unknown pattern <%s>\n", currentLineNo, token.lexeme);
+                    return token; 
+                }
                 break;
             case 35:
                 if (isDigit(c)) { token.lexeme[lex_len++] = c; state = 36; }
-                else { retract(B, 6); lex_len -= 4; token.lexeme[lex_len] = '\0'; token.type = TK_NUM; token.value.numValue = atoi(token.lexeme); token.lineNo = currentLineNo; return token; }
-                break;
-            case 36:
-                if (isDigit(c)) {
-                    token.lexeme[lex_len++] = c;
-                    token.type = TK_RNUM;
-                    token.value.rnumValue = atof(token.lexeme);
-                    token.lineNo = currentLineNo;
-                    return token;
-                } else {
-                    retract(B, 7); lex_len -= 5; token.lexeme[lex_len] = '\0'; token.type = TK_NUM; token.value.numValue = atoi(token.lexeme); token.lineNo = currentLineNo; return token;
+                else { 
+                    retract(B, 1); 
+                    token.type = TK_ERROR; 
+                    token.lineNo = currentLineNo; 
+                    printf("Line no: %d : Error: Unknown pattern <%s>\n", currentLineNo, token.lexeme);
+                    return token; 
                 }
                 break;
+            case 36:
+                if (isDigit(c)) { 
+                    token.lexeme[lex_len++] = c; 
+                    state = 37; 
+                }
+                else { 
+                    retract(B, 1); 
+                    token.type = TK_ERROR; 
+                    token.lineNo = currentLineNo; 
+                    printf("Line no: %d : Error: Unknown pattern <%s>\n", currentLineNo, token.lexeme);
+                    return token; 
+                }
+                break;
+            case 37:
+                // Expected 'Other' since we already read 2 digits for exponent
+                // 'Other' includes anything, even a digit like '7' in '12.34E567'
+                retract(B, 1);
+                token.type = TK_RNUM;
+                token.value.rnumValue = atof(token.lexeme);
+                token.lineNo = currentLineNo;
+                return token;
 
             // TK_ID : [b-d][2-7][b-d]*[2-7]* length 2 to 20
             case 40:
