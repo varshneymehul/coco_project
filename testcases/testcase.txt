@@ -1,0 +1,13 @@
+% This is a test comment 
+_main 
+    type int: b2;
+    type real: c3;
+    b2 <--- 5;
+    c3 <--- 10.50;
+    
+    if (b2 < 10) then
+        write ( b2 );
+    endif
+    
+    return;
+end
