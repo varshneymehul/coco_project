@@ -65,7 +65,8 @@ int main(int argc, char *argv[]) {
                     if (t.type == TK_EOF) break;
                     if (t.type == TK_ERROR) continue; // Already prints line
                     
-                    printf("Line No: %-5d   Lexeme: %s  Token: %-20s\n", t.lineNo, t.lexeme, getTokenName(t.type));
+                    printf("Line no. %d\t Lexeme %s\tToken %s\n", 
+                           t.lineNo, t.lexeme, getTokenName(t.type));
                 }
                 closeBuffer(B);
                 fclose(fp);
@@ -73,17 +74,19 @@ int main(int argc, char *argv[]) {
             }
             case 3: {
                 // Parse & Print Tree
-                FirstFollowSets* F = ComputeFirstAndFollowSets("grammar.txt");
+                grammar G;
+                FirstAndFollowSets(&G);
                 
-                int parse_table[MAX_SYMBOLS][MAX_SYMBOLS];
-                createParseTable(parse_table, F);
-
-                ParseTree PT = parseInputSourceCode(argv[1], parse_table);
-
-                printParseTree(PT, argv[2]);
-                // freeParseTree(PT);
-                printf("Parse tree successfully saved to %s\n", argv[2]);
+                table T;
+                FirstAndFollow F; // dummy for signature wrapper
+                createParseTable(F, &T, &G);
                 
+                parseTree PT = parseInputSourceCode(argv[1], T, G);
+                if (PT != NULL) {
+                    printParseTree(PT, argv[2]);
+                    freeParseTree(PT);
+                    printf("Parse tree successfully saved to %s\n", argv[2]);
+                }
                 break;
             }
             case 4: {
@@ -93,12 +96,13 @@ int main(int argc, char *argv[]) {
                 start_time = clock();
 
                 // Run Lexer and Parser logic
-                FirstFollowSets* F = ComputeFirstAndFollowSets("grammar.txt");
-                int parse_table[MAX_SYMBOLS][MAX_SYMBOLS];
-                createParseTable(parse_table, F);
-
-                ParseTree PT = parseInputSourceCode(argv[1], parse_table);
-                // freeParseTree(PT);
+                grammar G;
+                FirstAndFollowSets(&G);
+                table T;
+                FirstAndFollow F;
+                createParseTable(F, &T, &G);
+                parseTree PT = parseInputSourceCode(argv[1], T, G);
+                if (PT) freeParseTree(PT);
 
                 end_time = clock();
                 
